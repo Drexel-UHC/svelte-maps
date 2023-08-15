@@ -35,6 +35,13 @@
     code: 'AREACD',
   };
 
+  paData = './data/data_county.csv';
+  paBounds = {
+    url: './data/geo_counties.json',
+    layer: 'geog',
+    code: 'AREACD',
+  };
+
   const lsoaData = './data/imd-lsoa11.csv';
   const lsoaBounds = {
     url: 'https://cdn.ons.gov.uk/maptiles/administrative/lsoa/v1/boundaries/{z}/{x}/{y}.pbf',
@@ -50,6 +57,10 @@
     ew: [
       [-6, 49],
       [2, 56],
+    ],
+    pa: [
+      [-80.519851, 38.788657],
+      [-66.885444, 47.459833],
     ],
   };
 
