@@ -61,7 +61,7 @@
     ### Export
     sf_uhc %>% 
       geojsonio::topojson_write(
-        file = "../public/data/geo_counties.json",
+        file = "clean/geo_counties.json",
         object_name  = 'geog')
     
   }
@@ -102,7 +102,7 @@
              matches("\\b\\d{4}\\b"))
     
     ## Export
-    df_data_state %>% write_csv("../public/data/data_state.csv")
+    df_data_state %>% write_csv("clean/data_state.csv")
     
   }
   
@@ -159,7 +159,7 @@
              matches("\\b\\d{4}\\b"))
     
     ## Export
-    df_data_county %>% write_csv("../public/data/data_county.csv")
+    df_data_county %>% write_csv("clean/data_county.csv")
     
   }
   
