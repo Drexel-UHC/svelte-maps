@@ -35,11 +35,11 @@
     code: 'AREACD',
   };
 
-  paData = './data/data_county.csv';
-  paBounds = {
+  const paData = './data/data_county.csv';
+  const paBounds = {
     url: './data/geo_counties.json',
     layer: 'geog',
-    code: 'AREACD',
+    code: 'AREANM',
   };
 
   const lsoaData = './data/imd-lsoa11.csv';
@@ -81,11 +81,18 @@
   let visLayers = true;
 
   // Get geometry for geojson maps
-  getTopo(pconBounds.url, pconBounds.layer).then((res) => (geojson = res));
+  getTopo(paBounds.url, paBounds.layer).then((res) => {
+    console.log('boundaries');
+    console.log(res);
+
+    geojson = res;
+  });
 
   // Get data for geojson maps
-  getData(pconData).then((res) => {
-    let vals = res.map((d) => d.salary).sort((a, b) => a - b);
+  getData(paData).then((res) => {
+    console.log(`res`);
+    console.log(res);
+    let vals = res.map((d) => d.age_med).sort((a, b) => a - b);
     let len = vals.length;
     let breaks = [
       vals[0],
@@ -96,9 +103,12 @@
       vals[len - 1],
     ];
     res.forEach((d) => {
-      d.color = getColor(d.salary, breaks, colors.seq5);
+      d.color = getColor(d.age_med, breaks, colors.seq5);
     });
-    data.pcon = res;
+    console.log(`res2`);
+    console.log(res);
+
+    data.pa = res;
   });
 
   // Get data for vector tiles map
@@ -147,6 +157,7 @@
         <Map
           id="map1"
           style="./data/style-osm.json"
+          location={{ bounds: bounds.pa }}
           bind:map={map1}
           bind:zoom
           bind:center
@@ -159,11 +170,11 @@
     </div>
     <div>
       <div class="map">
-        {#if geojson && data.pcon}
+        {#if geojson && data.pa}
           <Map
             id="map2"
             style="./data/style-osm-grey.json"
-            location={{ bounds: bounds.uk }}
+            location={{ bounds: bounds.pa }}
             bind:map={map2}
             controls={true}
           >
@@ -175,10 +186,10 @@
                 promoteId={pconBounds.code}
                 maxzoom={13}
               >
-                {#if showLayers}
+                {#if showLayers && false}
                   <MapLayer
                     id="pcon"
-                    data={data.pcon}
+                    data={data.pa}
                     type="fill"
                     paint={{
                       'fill-color': [
@@ -201,11 +212,11 @@
     </div>
     <div>
       <div class="map">
-        {#if geojson && data.pcon}
+        {#if geojson && data.pa && false}
           <Map
             id="map3"
             style="./data/style-osm-grey.json"
-            location={{ bounds: bounds.uk }}
+            location={{ bounds: bounds.pa }}
             bind:map={map3}
             controls={false}
           >
@@ -220,7 +231,7 @@
                 {#if showLayers}
                   <MapLayer
                     id="pcon-fill"
-                    data={data.pcon}
+                    data={data.pa}
                     type="fill"
                     hover={true}
                     bind:hovered
