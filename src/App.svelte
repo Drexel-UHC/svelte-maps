@@ -186,7 +186,7 @@
                 promoteId={pconBounds.code}
                 maxzoom={13}
               >
-                {#if showLayers && false}
+                {#if showLayers}
                   <MapLayer
                     id="pcon"
                     data={data.pa}
@@ -212,7 +212,7 @@
     </div>
     <div>
       <div class="map">
-        {#if geojson && data.pa && false}
+        {#if geojson && data.pa}
           <Map
             id="map3"
             style="./data/style-osm-grey.json"

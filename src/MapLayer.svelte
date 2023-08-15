@@ -1,243 +1,263 @@
 <script>
-	import { getContext, setContext, createEventDispatcher, onDestroy, onMount } from 'svelte';
-	import { writable } from 'svelte/store';
+  import {
+    getContext,
+    setContext,
+    createEventDispatcher,
+    onDestroy,
+    onMount,
+  } from 'svelte';
+  import { writable } from 'svelte/store';
 
-	const dispatch = createEventDispatcher();
-	
-	export let id;
-	export let type;
-	export let filter = null;
-	export let layout = {};
-	export let paint = {};
-	export let data = null;
-	export let colorKey = "color";
-	export let nameKey = null;
-	export let valueKey = null;
-	export let idKey = null;
-	export let select = false;
-	export let clickIgnore = false;
-	export let clickCenter = false;
-	export let selected = null;
-	export let hover = false;
-	export let hovered = null;
-	export let highlight = false;
-	export let highlightKey = 'highlighted';
-	export let highlighted = [];
-	export let order = null;
-	export let maxzoom = null;
-	export let minzoom = null;
-	export let sourceLayer = null;
-	export let visible = true;
-	
-	const { source, layer, promoteId } = getContext('source');
-	const { getMap } = getContext('map');
-	const map = getMap();
+  const dispatch = createEventDispatcher();
 
-	setContext("layer", {
-		layer: id
-	});
+  export let id;
+  export let type;
+  export let filter = null;
+  export let layout = {};
+  export let paint = {};
+  export let data = null;
+  export let colorKey = 'color';
+  export let nameKey = null;
+  export let valueKey = null;
+  export let idKey = null;
+  export let select = false;
+  export let clickIgnore = false;
+  export let clickCenter = false;
+  export let selected = null;
+  export let hover = false;
+  export let hovered = null;
+  export let highlight = false;
+  export let highlightKey = 'highlighted';
+  export let highlighted = [];
+  export let order = null;
+  export let maxzoom = null;
+  export let minzoom = null;
+  export let sourceLayer = null;
+  export let visible = true;
 
-	const hoverObj = writable({
-		id: null,
-		feature: null,
-		event: null
-	});
-	setContext("hover", hoverObj);
+  const { source, layer, promoteId } = getContext('source');
+  const { getMap } = getContext('map');
+  const map = getMap();
 
-	function sleep (ms = 1000) {
-  	return new Promise((resolve) => setTimeout(resolve, ms));
-	}
+  setContext('layer', {
+    layer: id,
+  });
 
-	idKey = idKey ? idKey : promoteId;
-	sourceLayer = sourceLayer ? sourceLayer : layer;
-	
-	let selectedPrev = null;
-	let hoveredPrev = null;
-	let highlightedPrev = [];
+  $: {
+    console.log(`----------  MapLayer.svelte  `);
+    console.log(`id`);
+    console.log(id);
+    console.log(`idKey`);
+    console.log(idKey);
+    console.log(`valueKey`);
+    console.log(valueKey);
+    console.log(`colorKey`);
+    console.log(colorKey);
+    console.log(`nameKey`);
+    console.log(nameKey);
+  }
+  const hoverObj = writable({
+    id: null,
+    feature: null,
+    event: null,
+  });
+  setContext('hover', hoverObj);
 
-	layout.visibility = visible ? 'visible' : 'none';
-	
-	let options = {
-		'id': id,
-		'type': type,
-		'source': source,
-		'paint': paint,
-		'layout': layout
-	};
+  function sleep(ms = 1000) {
+    return new Promise((resolve) => setTimeout(resolve, ms));
+  }
 
-	if (filter) {
-		options['filter'] = filter;
-	}
-	
-	if (sourceLayer) {
-		options['source-layer'] = sourceLayer;
-	}
-	if (maxzoom) {
-		options['maxzoom'] = maxzoom;
-	}
-	if (minzoom) {
-		options['minzoom'] = minzoom;
-	}
-	
-	onMount(() => {
-		if (map.getLayer(id)) map.removeLayer(id);
-		map.addLayer(options, order);
-	});
+  idKey = idKey ? idKey : promoteId;
+  sourceLayer = sourceLayer ? sourceLayer : layer;
 
-	// Updates "color" feature states for all geo codes in data array
-	// Assumes that each data point has the colours defined on the colorCode key
-	export function updateColors(data, cKey = colorKey) {
-		console.log('updating colors...');
+  let selectedPrev = null;
+  let hoveredPrev = null;
+  let highlightedPrev = [];
 
-		if (nameKey || valueKey) {
-			for (const d of data) {
-				map.setFeatureState({
-					source: source,
-					sourceLayer: sourceLayer,
-					id: d[idKey]
-				}, {
-					color: cKey ? d[cKey] : null,
-					name: nameKey ? d[nameKey] : null,
-					value: valueKey ? d[valueKey] : null
-				});
-			}
-		} else {
-			for (const d of data) {
-				map.setFeatureState({
-					source: source,
-					sourceLayer: sourceLayer,
-					id: d[idKey]
-				}, {
-					color: d[cKey]
-				});
-			}
-		}
-		
-	}
+  layout.visibility = visible ? 'visible' : 'none';
 
-	$: data && updateColors(data, colorKey);
+  let options = {
+    id: id,
+    type: type,
+    source: source,
+    paint: paint,
+    layout: layout,
+  };
 
-	// Function to update layer filter
-	function setFilter(filter) {
-		if (map.getLayer(id)) map.setFilter(id, filter);
-	}
-	$: setFilter(filter);
+  if (filter) {
+    options['filter'] = filter;
+  }
 
-	// Function to update paint properties
-	function setPaint(paint) {
-		if (map.getLayer(id)) {
-			for (const key in paint) {
-				map.setPaintProperty(id, key, paint[key]);
-			}
-		};
-	}
-	$: setPaint(paint);
+  if (sourceLayer) {
+    options['source-layer'] = sourceLayer;
+  }
+  if (maxzoom) {
+    options['maxzoom'] = maxzoom;
+  }
+  if (minzoom) {
+    options['minzoom'] = minzoom;
+  }
 
-	// Function to toggle layer visibility based on "visible" prop
-	function toggleVisibility(visible) {
-		if (map.getLayer(id)) map.setLayoutProperty(id, 'visibility', visible ? 'visible' : 'none');
-	}
-	$: toggleVisibility(visible);
-	
-	// Updates the "highlighted" feature state as geo codes are added to/removed from the highlighted array
-	$: if (highlight && highlighted != highlightedPrev) {
-		if (highlightedPrev[0]) {
-			for (const id of highlightedPrev) {
-				let state = {};
-				state[highlightKey] = false;
-				map.setFeatureState(
-					{ source, sourceLayer, id },
-					state
-				);
-			}
-		}
-		highlightedPrev = highlighted;
-		if (highlighted[0]) {
-			for (const id of highlighted) {
-				let state = {};
-				state[highlightKey] = true;
-				map.setFeatureState(
-					{ source, sourceLayer, id },
-					state
-				);
-			}
-		}
-	}
-	
-	// Adds a click event to change the selected geo code (if select = true for map layer)
-	if (select) {
-		map.on('click', id, (e) => {
+  onMount(() => {
+    if (map.getLayer(id)) map.removeLayer(id);
+    map.addLayer(options, order);
+  });
+
+  // Updates "color" feature states for all geo codes in data array
+  // Assumes that each data point has the colours defined on the colorCode key
+  export function updateColors(data, cKey = colorKey) {
+    console.log('updating colors...');
+
+    if (nameKey || valueKey) {
+      for (const d of data) {
+        map.setFeatureState(
+          {
+            source: source,
+            sourceLayer: sourceLayer,
+            id: d[idKey],
+          },
+          {
+            color: cKey ? d[cKey] : null,
+            name: nameKey ? d[nameKey] : null,
+            value: valueKey ? d[valueKey] : null,
+          }
+        );
+      }
+    } else {
+      for (const d of data) {
+        map.setFeatureState(
+          {
+            source: source,
+            sourceLayer: sourceLayer,
+            id: d[idKey],
+          },
+          {
+            color: d[cKey],
+          }
+        );
+      }
+    }
+    console.log('done updating colors...');
+  }
+
+  $: data && updateColors(data, colorKey);
+
+  // Function to update layer filter
+  function setFilter(filter) {
+    if (map.getLayer(id)) map.setFilter(id, filter);
+  }
+  $: setFilter(filter);
+
+  // Function to update paint properties
+  function setPaint(paint) {
+    if (map.getLayer(id)) {
+      for (const key in paint) {
+        map.setPaintProperty(id, key, paint[key]);
+      }
+    }
+  }
+  $: setPaint(paint);
+
+  // Function to toggle layer visibility based on "visible" prop
+  function toggleVisibility(visible) {
+    if (map.getLayer(id))
+      map.setLayoutProperty(id, 'visibility', visible ? 'visible' : 'none');
+  }
+  $: toggleVisibility(visible);
+
+  // Updates the "highlighted" feature state as geo codes are added to/removed from the highlighted array
+  $: if (highlight && highlighted != highlightedPrev) {
+    if (highlightedPrev[0]) {
+      for (const id of highlightedPrev) {
+        let state = {};
+        state[highlightKey] = false;
+        map.setFeatureState({ source, sourceLayer, id }, state);
+      }
+    }
+    highlightedPrev = highlighted;
+    if (highlighted[0]) {
+      for (const id of highlighted) {
+        let state = {};
+        state[highlightKey] = true;
+        map.setFeatureState({ source, sourceLayer, id }, state);
+      }
+    }
+  }
+
+  // Adds a click event to change the selected geo code (if select = true for map layer)
+  if (select) {
+    map.on('click', id, (e) => {
       if (e.features.length > 0 && !clickIgnore) {
-				let feature = e.features[0];
-				selected = feature.id;
+        let feature = e.features[0];
+        selected = feature.id;
 
-				dispatch('select', {
-					id: selected,
-					feature: feature,
-					event: e
-				});
-				
-				if (selectedPrev) {
-					map.setFeatureState(
+        dispatch('select', {
+          id: selected,
+          feature: feature,
+          event: e,
+        });
+
+        if (selectedPrev) {
+          map.setFeatureState(
             { source: source, sourceLayer: sourceLayer, id: selectedPrev },
             { selected: false }
           );
-				}
-				
-				map.setFeatureState(
+        }
+
+        map.setFeatureState(
           { source: source, sourceLayer: sourceLayer, id: selected },
           { selected: true }
-				);
+        );
 
-				if (clickCenter) {
-					let center = centroid(e.features[0].toJSON().geometry);
-					map.flyTo({
-						center: center.geometry.coordinates
-					});
-				}
-				
-				selectedPrev = selected;
-			}
+        if (clickCenter) {
+          let center = centroid(e.features[0].toJSON().geometry);
+          map.flyTo({
+            center: center.geometry.coordinates,
+          });
+        }
+
+        selectedPrev = selected;
+      }
     });
-	}
-	
-	// Updates the selected geo code if it is changed elsewhere in the app (outside of this component)
-	$: if (select && selected != selectedPrev) {
-		if (selectedPrev) {
-			map.setFeatureState(
-				{ source: source, sourceLayer: sourceLayer, id: selectedPrev },
-				{ selected: false }
-			);
-		}
-		if (selected) {
-			map.setFeatureState(
-				{ source: source, sourceLayer: sourceLayer, id: selected },
-				{ selected: true }
-			);
-		}
-		selectedPrev = selected;
-	}
-	
-	// Adds an event to update the hovered geo code when the mouse is moved over the map
-	if (hover) {
-		map.on('mousemove', id, (e) => {
+  }
+
+  // Updates the selected geo code if it is changed elsewhere in the app (outside of this component)
+  $: if (select && selected != selectedPrev) {
+    if (selectedPrev) {
+      map.setFeatureState(
+        { source: source, sourceLayer: sourceLayer, id: selectedPrev },
+        { selected: false }
+      );
+    }
+    if (selected) {
+      map.setFeatureState(
+        { source: source, sourceLayer: sourceLayer, id: selected },
+        { selected: true }
+      );
+    }
+    selectedPrev = selected;
+  }
+
+  // Adds an event to update the hovered geo code when the mouse is moved over the map
+  if (hover) {
+    map.on('mousemove', id, (e) => {
       if (e.features.length > 0) {
-				if (hovered) {
+        if (hovered) {
           map.setFeatureState(
             { source: source, sourceLayer: sourceLayer, id: hovered },
             { hovered: false }
           );
         }
-				let feature = e.features[0];
-				hovered = hoveredPrev = feature.id;
+        let feature = e.features[0];
+        hovered = hoveredPrev = feature.id;
 
-				hoverObj.set({
-					id: hovered,
-					feature: feature,
-					event: e
-				});
+        hoverObj.set({
+          id: hovered,
+          feature: feature,
+          event: e,
+        });
 
-				dispatch('hover', $hoverObj);
+        dispatch('hover', $hoverObj);
 
         map.setFeatureState(
           { source: source, sourceLayer: sourceLayer, id: hovered },
@@ -245,52 +265,52 @@
         );
 
         // Change the cursor style as a UI indicator.
-				map.getCanvas().style.cursor = 'pointer';
+        map.getCanvas().style.cursor = 'pointer';
       }
-		});
-		
-		map.on('mouseleave', id, (e) => {
-			if (hovered) {
+    });
+
+    map.on('mouseleave', id, (e) => {
+      if (hovered) {
         map.setFeatureState(
           { source: source, sourceLayer: sourceLayer, id: hovered },
           { hovered: false }
-				);
+        );
       }
-			hovered = hoveredPrev = null;
+      hovered = hoveredPrev = null;
 
-			hoverObj.set({
-				id: null,
-				feature: null,
-				event: e
-			});
+      hoverObj.set({
+        id: null,
+        feature: null,
+        event: e,
+      });
 
-			dispatch('hover', $hoverObj);
-			
-			// Reset cursor and remove popup
-			map.getCanvas().style.cursor = '';
+      dispatch('hover', $hoverObj);
+
+      // Reset cursor and remove popup
+      map.getCanvas().style.cursor = '';
     });
-	}
-	
-	// Updates the hovered geo code if it is changed elsewhere in the app (outside of this component)
-	$: if (hover && hovered != hoveredPrev) {
-		if (hoveredPrev) {
-			map.setFeatureState(
-				{ source: source, sourceLayer: sourceLayer, id: hoveredPrev },
+  }
+
+  // Updates the hovered geo code if it is changed elsewhere in the app (outside of this component)
+  $: if (hover && hovered != hoveredPrev) {
+    if (hoveredPrev) {
+      map.setFeatureState(
+        { source: source, sourceLayer: sourceLayer, id: hoveredPrev },
         { hovered: false }
-			);
-		}
-		if (hovered) {
-			map.setFeatureState(
-				{ source: source, sourceLayer: sourceLayer, id: hovered },
+      );
+    }
+    if (hovered) {
+      map.setFeatureState(
+        { source: source, sourceLayer: sourceLayer, id: hovered },
         { hovered: true }
-			);
-		}
-		hoveredPrev = hovered;
-	}
-	
-	onDestroy(async () => {
-		if (map && map.getLayer(id)) map.removeLayer(id);
-	});
+      );
+    }
+    hoveredPrev = hovered;
+  }
+
+  onDestroy(async () => {
+    if (map && map.getLayer(id)) map.removeLayer(id);
+  });
 </script>
 
-<slot {hovered}></slot>
+<slot {hovered} />
