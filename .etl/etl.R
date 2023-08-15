@@ -159,7 +159,11 @@
              age_med = median_age,
              matches("\\b\\d{4}\\b"),
              AREACD = geoid,
-             AREANM = county_name)
+             AREANM = county_name) %>% 
+      rowwise() %>% 
+      mutate(salary = rnorm(1,400,30)) %>% 
+      ungroup() %>% 
+      select(AREACD, AREANM, salary, age_med)
     
     ## Export
     df_data_county %>% write_csv("clean/data_county.csv")
